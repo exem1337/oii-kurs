@@ -1,26 +1,39 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div class="page">
+    <app-header />
+    <app-form />
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import { ref } from "@vue/reactivity";
+import M from "materialize-css";
+import { onMounted } from "@vue/runtime-core";
+import AppHeader from './components/AppHeader.vue';
+import AppForm from './components/AppForm.vue';
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    HelloWorld
-  }
-}
+    AppHeader,
+    AppForm
+  },
+  setup() {
+    onMounted(() => {
+      M.AutoInit();
+    });
+    const sas = ref("");
+    const sus = ref("");
+    const sqs = ref(false);
+    const range = ref(0);
+    return { sus, sas, sqs, range };
+  },
+};
 </script>
 
 <style lang="scss">
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 </style>
