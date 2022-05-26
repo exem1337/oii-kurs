@@ -10,7 +10,8 @@
 </template>
 
 <script>
-import { watch, ref } from "@vue/runtime-core";
+import { watch, ref, onMounted } from "@vue/runtime-core";
+import M from "materialize-css";
 
 export default {
   props: {
@@ -22,9 +23,13 @@ export default {
       type: Array,
       required: true,
     },
+    value: {
+      type: String,
+      required: true
+    }
   },
   setup(props, { emit }) {
-    const optionValue = ref(props.options[0]);
+    const optionValue = ref(props.value);
 
     watch(
       () => optionValue.value,
@@ -32,6 +37,12 @@ export default {
         emit("update:modelValue", newValue);
       }
     );
+
+    onMounted(() => {
+      console.log(props.value)
+      M.AutoInit();
+      emit("update:modelValue", props.value);
+    })
 
     return { optionValue };
   },
