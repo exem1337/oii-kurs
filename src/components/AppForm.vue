@@ -15,7 +15,7 @@
         >
           <div class="flex">
             <p>{{ state }}</p>
-            <button>Удалить</button>
+            <app-button label="Удалить" />
           </div>
         </div>
         <app-input
@@ -28,7 +28,29 @@
           <app-button label="Добавить критерий" @click="onAddNewCriteria" />
         </div>
       </div>
+      <div class="card horizontal new-rule">
+        <p>Добавить новое правило</p>
+        ЕСЛИ
+        <div v-for="(criteria, key) in newRuleCriterias" :key="key">
+          <span v-if="key != 0">И</span>
+          <app-select
+            :label="criteria.name"
+            :options="criteria.states"
+            v-model="newRuleCriterias[key].value"
+            :value="criteria.states[0]"
+          />
+        </div>
+        ТО
+        <app-select
+          label="Результат"
+          :options="[`Выдать кредит`, `Не давать кредит`]"
+          v-model="newRuleResultOptions"
+          :value="`Выдать кредит`"
+        />
+        <app-button label="Добавить правило" @click="onAddNewRule" />
+      </div>
       <div class="card horizontal">
+        <h5 v-if="!form.length">Для начала работы, добавьте критерий</h5>
         <div class="criteria" v-for="(crit, key) in form" :key="key">
           <app-select
             :label="crit.name"
@@ -38,89 +60,19 @@
           />
         </div>
       </div>
-      <!-- <div class="card horizontal">
-        <app-input label="ФИО" placeholder="ФИО" v-model="form.name" />
-        <app-switch on="Мужской" off="Женский" v-model="form.sex" />
-        <app-range label="Возраст" v-model="form.age" />
-      </div>
-      <div class="card horizontal switches">
-        <app-switch
-          on="Обеспечен кредит"
-          off="Не обеспечен кредит"
-          v-model="form.creditGuearanteed"
-        />
-        <app-switch
-          on="Есть недвижимость"
-          off="Нет недвижимости"
-          v-model="form.hasHome"
-        />
-        <app-switch
-          on="Есть банковский счет"
-          off="Нет банковского счета"
-          v-model="form.hasBankAccount"
-        />
-        <app-switch
-          on="Есть страховка"
-          off="Нет страховки"
-          v-model="form.insurance"
-        />
-      </div>
-      <div class="card horizontal switches">
-        <app-range
-          label="Срок работы на данном направлении"
-          v-model="form.workPath"
-        />
-        <app-range
-          label="Срок работы на данном предприятии"
-          v-model="form.workPlace"
-        />
-				<app-range
-          label="Срок проживания на данной местности"
-          v-model="form.livingInThisArea"
-        />
-        <app-range
-          label="Срок ссуды (мес)"
-          v-model="form.insuranceAge"
-          :min="0"
-          :max="24"
-        />
-        <app-select
-          label="Основание направления расходов"
-          :options="moneyPaths"
-          v-model="form.moneyPaths"
-        />
-      </div> -->
     </div>
 
     <app-button label="Рассчитать" @click="onDecision" />
 
-    <div class="card horizontal new-rule">
-      <p>Добавить новое правило</p>
-      ЕСЛИ
-      <div v-for="(criteria, key) in newRuleCriterias" :key="key">
-        <span v-if="key != 0">И</span>
-        <app-select
-          :label="criteria.name"
-          :options="criteria.states"
-          v-model="newRuleCriterias[key].value"
-          :value="criteria.states[0]"
-        />
-      </div>
-      ТО
-      <app-select
-        label="Результат"
-        :options="[`Выдать кредит`, `Не давать кредит`]"
-        v-model="newRuleResultOptions"
-        :value="`Выдать кредит`"
-      />
-      <app-button label="Добавить правило" @click="onAddNewRule" />
-    </div>
-
-    <div class="card horizontal">
+    <div class="card horizontal ruleCard">
       <p>Редактирование базы правил</p>
       <div class="rule" v-for="(rule, key) in rules" :key="key">
         ЕСЛИ
-        <div v-for="(criteria, key) in rule.criterias" :key="key">
+        <div
+          class="ruleItem"
+          v-for="(criteria, key) in rule.criterias"
+          :key="key"
+        >
           <span v-if="key != 0">И</span>
           <app-select
             :label="criteria.name"
@@ -129,15 +81,22 @@
             :value="criteria.value"
           />
         </div>
-        ТО
+        <span class="to">ТО</span>
         <app-select
           label="Результат"
           :options="[`Выдать кредит`, `Не давать кредит`]"
           v-model="rule.result"
           :value="rule.result"
-        />{{rule}}
+        />
       </div>
     </div>
+    <teleport to="#app">
+      <div class="modall">
+        <div class="modal-inner">
+          <p>Ваш результат: Выдать кредит</p>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>
 
@@ -182,7 +141,7 @@ export default {
     const newCriteria = ref({
       name: "",
       states: [],
-      value: ''
+      value: "",
     });
 
     const newRule = ref({
@@ -193,9 +152,9 @@ export default {
     const newRuleResultOptions = ["Выдать кредит", "Не давать кредит"];
     const rules = ref([]);
     const newRuleCriterias = ref([]);
-    const newRuleCriteriasValues = ref([])
+    const newRuleCriteriasValues = ref([]);
     const newTerm = ref("");
-    const newRuleResult = ref('');
+    const newRuleResult = ref("");
 
     const moneyPaths = [
       "Выплаты по исполнительным документам",
@@ -213,11 +172,7 @@ export default {
     ];
 
     const onDecision = () => {
-      // M.toast({
-      //   html: decide(form.value)
-      //     ? "Вам выдан кредит"
-      //     : "Вам отказано в выдаче кредита",
-      // });
+      console.log(rules.value);
       console.log(form.value);
     };
 
@@ -231,10 +186,15 @@ export default {
         ...newCriteria.value,
         // value: "",
       });
+      newCriteria.value = {
+        name: "",
+        states: [],
+        value: "",
+      };
     };
 
     const onAddNewRule = () => {
-      console.log(newRuleCriterias.value)
+      console.log(newRuleCriterias.value);
       rules.value.push({
         criterias: newRuleCriterias.value,
         result: newRuleResult.value,
@@ -267,7 +227,7 @@ export default {
       newRuleResultOptions,
       onAddNewRule,
       newRuleCriteriasValues,
-      newRuleResult
+      newRuleResult,
     };
   },
 };
@@ -282,6 +242,11 @@ export default {
 .flex {
   display: flex;
   justify-content: space-around;
+  align-items: top;
+
+  p {
+    margin-right: 15px;
+  }
 }
 
 .card {
@@ -297,5 +262,55 @@ export default {
 
 .new-rule {
   display: flex;
+}
+
+.rule {
+  display: flex;
+  align-items: center;
+
+  .ruleItem {
+    margin: 15px;
+    display: flex;
+    align-items: center;
+
+    span {
+      margin-right: 15px;
+    }
+  }
+}
+
+.ruleCard {
+  width: fit-content;
+}
+
+.to {
+  margin-right: 15px;
+}
+
+.modall {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+}
+
+.modall .modal-inner {
+  width: 500px;
+  height: 200px;
+  background-color: #fff;
+  border-radius: 6px;
+
+  box-shadow: -3px 5px 25px 0px rgba(34, 60, 80, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 2rem;
 }
 </style>

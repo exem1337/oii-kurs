@@ -39,7 +39,6 @@ export default {
     );
 
     onMounted(() => {
-      console.log(props.value)
       M.AutoInit();
       emit("update:modelValue", props.value);
     })
